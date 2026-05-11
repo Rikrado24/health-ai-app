@@ -1,0 +1,287 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function authEmail() {
+      return signedIn() && request.auth.token.email is string ? request.auth.token.email : "";
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isSuperAdmin() {
+      return isAdmin() && request.auth.token.super_admin == true;
+    }
+
+    function isOwnerUid(uid) {
+      return signedIn() && uid is string && uid == request.auth.uid;
+    }
+
+    function isOwnerEmail(email) {
+      return signedIn() && email is string && email == authEmail();
+    }
+
+    function isNumber(value) {
+      return value is int || value is float;
+    }
+
+    function optionalString(data, field, maxSize) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxSize);
+    }
+
+    function optionalNumber(data, field, minValue, maxValue) {
+      return !(field in data) || (isNumber(data[field]) && data[field] >= minValue && data[field] <= maxValue);
+    }
+
+    function optionalTimestamp(data, field) {
+      return !(field in data) || data[field] is timestamp;
+    }
+
+    function validUsernameValue(value) {
+      return value is string &&
+        value.size() >= 3 &&
+        value.size() <= 32 &&
+        value.matches('^[a-z0-9._-]+$');
+    }
+
+    function resourceOwnerAccess() {
+      return (resource.data.ownerUid is string && isOwnerUid(resource.data.ownerUid)) ||
+        (resource.data.ownerEmail is string && isOwnerEmail(resource.data.ownerEmail));
+    }
+
+    function validUserProfileOwner(uid, data) {
+      return isOwnerUid(uid) &&
+        data.ownerEmail is string &&
+        isOwnerEmail(data.ownerEmail) &&
+        (!("ownerUid" in data) || (data.ownerUid is string && isOwnerUid(data.ownerUid)));
+    }
+
+    function validUserProfileData(uid, data) {
+      return data.keys().hasOnly([
+          "ownerUid",
+          "ownerEmail",
+          "fullName",
+          "birthDate",
+          "age",
+          "username",
+          "gender",
+          "createdAt",
+          "updatedAt",
+          "lastLoginAt"
+        ]) &&
+        data.ownerEmail is string &&
+        data.ownerEmail.size() <= 160 &&
+        validUserProfileOwner(uid, data) &&
+        optionalString(data, "fullName", 120) &&
+        optionalString(data, "birthDate", 20) &&
+        optionalNumber(data, "age", 0, 120) &&
+        (!("username" in data) || validUsernameValue(data.username)) &&
+        (!("gender" in data) || data.gender in ["pria", "wanita", "tidak_ditentukan"]) &&
+        optionalTimestamp(data, "createdAt") &&
+        optionalTimestamp(data, "updatedAt") &&
+        optionalTimestamp(data, "lastLoginAt");
+    }
+
+    function validUsernameRegistryDoc(username, data) {
+      return validUsernameValue(username) &&
+        data.keys().hasOnly([
+          "ownerUid",
+          "ownerEmail",
+          "username",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.keys().hasAll([
+          "ownerUid",
+          "ownerEmail",
+          "username",
+          "createdAt",
+          "updatedAt"
+        ]) &&
+        data.ownerUid is string &&
+        isOwnerUid(data.ownerUid) &&
+        data.ownerEmail is string &&
+        isOwnerEmail(data.ownerEmail) &&
+        data.username is string &&
+        data.username == username &&
+        validUsernameValue(data.username) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function validHealthData(data) {
+      return data.keys().hasOnly([
+          "timestamp",
+          "steps",
+          "height",
+          "weight",
+          "calories",
+          "sleep",
+          "heartRate",
+          "bloodPressure",
+          "meals",
+          "source",
+          "ownerEmail",
+          "ownerUid"
+        ]) &&
+        data.keys().hasAll([
+          "timestamp",
+          "steps",
+          "height",
+          "weight",
+          "calories",
+          "sleep",
+          "heartRate",
+          "bloodPressure",
+          "meals",
+          "source",
+          "ownerEmail",
+          "ownerUid"
+        ]) &&
+        data.ownerEmail is string &&
+        isOwnerEmail(data.ownerEmail) &&
+        data.ownerUid is string &&
+        isOwnerUid(data.ownerUid) &&
+        data.timestamp is timestamp &&
+        isNumber(data.steps) &&
+        data.steps >= 0 &&
+        data.steps <= 200000 &&
+        isNumber(data.height) &&
+        data.height >= 0 &&
+        data.height <= 300 &&
+        isNumber(data.weight) &&
+        data.weight >= 0 &&
+        data.weight <= 500 &&
+        isNumber(data.calories) &&
+        data.calories >= 0 &&
+        data.calories <= 20000 &&
+        isNumber(data.sleep) &&
+        data.sleep >= 0 &&
+        data.sleep <= 24 &&
+        isNumber(data.heartRate) &&
+        data.heartRate >= 0 &&
+        data.heartRate <= 250 &&
+        data.bloodPressure is string &&
+        data.bloodPressure.size() <= 20 &&
+        data.meals is string &&
+        data.meals.size() <= 600 &&
+        data.source is string &&
+        data.source.size() <= 40;
+    }
+
+    function validDeviceActivity(data) {
+      return data.keys().hasOnly([
+          "ownerEmail",
+          "ownerUid",
+          "steps",
+          "calories",
+          "distanceMeters",
+          "speedMps",
+          "source",
+          "timestamp"
+        ]) &&
+        data.keys().hasAll([
+          "ownerEmail",
+          "ownerUid",
+          "steps",
+          "calories",
+          "distanceMeters",
+          "speedMps",
+          "source",
+          "timestamp"
+        ]) &&
+        data.ownerEmail is string &&
+        isOwnerEmail(data.ownerEmail) &&
+        data.ownerUid is string &&
+        isOwnerUid(data.ownerUid) &&
+        isNumber(data.steps) &&
+        data.steps >= 0 &&
+        data.steps <= 200000 &&
+        isNumber(data.calories) &&
+        data.calories >= 0 &&
+        data.calories <= 20000 &&
+        isNumber(data.distanceMeters) &&
+        data.distanceMeters >= 0 &&
+        data.distanceMeters <= 200000 &&
+        isNumber(data.speedMps) &&
+        data.speedMps >= 0 &&
+        data.speedMps <= 80 &&
+        data.source is string &&
+        data.source.size() <= 40 &&
+        data.timestamp is timestamp;
+    }
+
+    function validDeviceVitals(data) {
+      return data.keys().hasOnly([
+          "ownerEmail",
+          "ownerUid",
+          "heartRate",
+          "bloodPressure",
+          "timestamp"
+        ]) &&
+        data.keys().hasAll([
+          "ownerEmail",
+          "heartRate",
+          "bloodPressure",
+          "timestamp"
+        ]) &&
+        data.ownerEmail is string &&
+        isOwnerEmail(data.ownerEmail) &&
+        (!("ownerUid" in data) || (data.ownerUid is string && isOwnerUid(data.ownerUid))) &&
+        isNumber(data.heartRate) &&
+        data.heartRate >= 0 &&
+        data.heartRate <= 250 &&
+        data.bloodPressure is string &&
+        data.bloodPressure.size() <= 20 &&
+        data.timestamp is timestamp;
+    }
+
+    match /usernames/{username} {
+      allow read: if isAdmin() || (resource.data.ownerUid is string && isOwnerUid(resource.data.ownerUid));
+      allow create: if signedIn() &&
+        validUsernameRegistryDoc(username, request.resource.data) &&
+        !exists(/databases/$(database)/documents/usernames/$(username));
+      allow update: if isAdmin() || (
+        resource.data.ownerUid is string &&
+        isOwnerUid(resource.data.ownerUid) &&
+        request.resource.data.ownerUid == resource.data.ownerUid &&
+        request.resource.data.ownerEmail == resource.data.ownerEmail &&
+        validUsernameRegistryDoc(username, request.resource.data)
+      );
+      allow delete: if isAdmin() || (resource.data.ownerUid is string && isOwnerUid(resource.data.ownerUid));
+    }
+
+    match /userProfiles/{uid} {
+      allow read: if isAdmin() || isOwnerUid(uid);
+      allow create: if isAdmin() || validUserProfileData(uid, request.resource.data);
+      allow update: if isAdmin() || validUserProfileData(uid, request.resource.data);
+      allow delete: if isAdmin() || isOwnerUid(uid);
+    }
+
+    match /healthData/{docId} {
+      allow read: if isAdmin() || resourceOwnerAccess();
+      allow create: if isAdmin() || validHealthData(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /deviceActivity/{docId} {
+      allow read: if isAdmin() || resourceOwnerAccess();
+      allow create: if isAdmin() || validDeviceActivity(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /deviceVitals/{docId} {
+      allow read: if isAdmin() || resourceOwnerAccess();
+      allow create: if isAdmin() || validDeviceVitals(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

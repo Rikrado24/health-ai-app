@@ -1,0 +1,52 @@
+{
+  "name": "health-ai-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "cap:copy": "npx cap copy",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:android": "npm run cap:sync && npx cap open android",
+    "android:setup": "powershell -ExecutionPolicy Bypass -File .\\scripts\\setup-android.ps1",
+    "android:debug": "powershell -ExecutionPolicy Bypass -File .\\scripts\\build-android-debug.ps1",
+    "android:release": "powershell -ExecutionPolicy Bypass -File .\\scripts\\build-android-release.ps1",
+    "android:signing": "powershell -ExecutionPolicy Bypass -File .\\scripts\\setup-release-signing.ps1",
+    "hosting:deploy": "npm run build && npx firebase-tools deploy --only hosting --project sehatai-68f20",
+    "hosting:channel": "npm run build && npx firebase-tools hosting:channel:deploy preview --project sehatai-68f20",
+    "functions:build": "npm --prefix functions run build",
+    "functions:deploy": "npm --prefix functions run build && npx firebase-tools deploy --only functions --project sehatai-68f20",
+    "app:deploy": "npm run hosting:deploy",
+    "app:deploy:full": "npm run build && npm --prefix functions run build && npx firebase-tools deploy --only hosting,functions --project sehatai-68f20"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.3.3",
+    "firebase": "^12.13.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.5.0",
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "autoprefixer": "^10.4.24",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.2.0"
+  }
+}

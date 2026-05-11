@@ -1,0 +1,53 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+functions/lib
+dist-ssr
+.env
+.env.*
+functions/.env
+functions/.env.*
+!.env.example
+!functions/.env.example
+*.local
+.firebase
+firebase-debug.log
+firebase-debug.*.log
+
+# Mobile local secrets/config
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
+android/keystore.properties
+android/keystore.credentials.txt
+android/local.properties
+
+# Mobile build artifacts
+android/.gradle/
+android/app/build/
+ios/App/Pods/
+ios/App/build/
+
+# Python cache artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

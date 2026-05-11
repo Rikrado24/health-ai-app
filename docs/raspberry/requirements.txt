@@ -1,0 +1,5 @@
+python-dotenv
+requests
+RPi.GPIO
+adafruit-blinka
+adafruit-circuitpython-vl53l0x
