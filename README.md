@@ -119,6 +119,15 @@ Android:
 - Run `npm run cap:sync`
 - Run `npm run cap:android`
 
+Android release signing (recommended secure mode):
+- `android/app/build.gradle` now supports environment variables:
+  - `ANDROID_KEYSTORE_FILE`
+  - `ANDROID_KEYSTORE_PASSWORD`
+  - `ANDROID_KEY_ALIAS`
+  - `ANDROID_KEY_PASSWORD`
+- If these variables are set, Gradle can sign release builds without relying on `android/keystore.properties`.
+- Keep `android/keystore.properties` and `android/keystore.credentials.txt` local-only and never share them.
+
 ## Realtime Activity Sync
 
 The app writes GPS-derived activity samples to Firestore collection `deviceActivity`.

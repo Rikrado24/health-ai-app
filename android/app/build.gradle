@@ -5,6 +5,18 @@ def keystorePropertiesFile = rootProject.file('keystore.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def signingValue = { String propKey, String envKey ->
+    def envValue = System.getenv(envKey)
+    if (envValue != null && envValue.trim()) {
+        return envValue.trim()
+    }
+    def propValue = keystoreProperties[propKey]
+    return propValue != null ? propValue.toString().trim() : ""
+}
+def signingStoreFile = signingValue('storeFile', 'ANDROID_KEYSTORE_FILE')
+def signingStorePassword = signingValue('storePassword', 'ANDROID_KEYSTORE_PASSWORD')
+def signingKeyAlias = signingValue('keyAlias', 'ANDROID_KEY_ALIAS')
+def signingKeyPassword = signingValue('keyPassword', 'ANDROID_KEY_PASSWORD')
 
 android {
     namespace "com.healthai.app"
@@ -23,12 +35,12 @@ android {
         }
     }
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        if (signingStoreFile && signingStorePassword && signingKeyAlias && signingKeyPassword) {
             release {
-                storeFile rootProject.file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+                storeFile rootProject.file(signingStoreFile)
+                storePassword signingStorePassword
+                keyAlias signingKeyAlias
+                keyPassword signingKeyPassword
             }
         }
     }
@@ -36,7 +48,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            if (keystorePropertiesFile.exists()) {
+            if (signingConfigs.findByName("release") != null) {
                 signingConfig signingConfigs.release
             }
         }
